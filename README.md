@@ -64,16 +64,15 @@ The strongest methodological choice in the project was excluding **call duration
 ```text
 bank-marketing-propensity-modeling/
 ├── README.md
-├── accenture_bank_marketing_propensity.ipynb
+├── analysis.py
 └── requirements.txt
 ```
 
 ## Reproducing the analysis
 
-1. Open the notebook in Google Colab or Jupyter.
-2. Install the packages in `requirements.txt`.
-3. Run the notebook from top to bottom.
-4. Compare model metrics and inspect the threshold-analysis tables.
+1. Install the packages in `requirements.txt`.
+2. Run `analysis.py` in an IPython/Jupyter environment or adapt the `display()` calls to `print()` for a standard Python shell.
+3. Compare model metrics and inspect the threshold-analysis tables.
 
 ## Limitations
 
