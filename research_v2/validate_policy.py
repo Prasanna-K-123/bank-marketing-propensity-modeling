@@ -211,7 +211,9 @@ def main():
                         items.append((prefix + '/length', len(a), len(b)))
                     for j, (left, right) in enumerate(zip(a, b)):
                         items.extend(discrepancies(left, right, prefix + '/' + str(j)))
-                elif isinstance(a, float) and isinstance(b, float) and math.isfinite(a) and math.isfinite(b):
+                elif type(a) is not type(b):
+                    items.append((prefix + '/type', type(a).__name__, type(b).__name__))
+                elif isinstance(a, float) and math.isfinite(a) and math.isfinite(b):
                     # IEEE-754 summation order can differ by ~1e-16 across
                     # identical pinned runner environments. This bound is far
                     # below every reported precision; no outcome may be
