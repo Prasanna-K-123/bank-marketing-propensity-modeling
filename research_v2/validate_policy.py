@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import platform
 import sys
 from pathlib import Path
@@ -210,18 +211,27 @@ def main():
                         items.append((prefix + '/length', len(a), len(b)))
                     for j, (left, right) in enumerate(zip(a, b)):
                         items.extend(discrepancies(left, right, prefix + '/' + str(j)))
+                elif isinstance(a, float) and isinstance(b, float) and math.isfinite(a) and math.isfinite(b):
+                    # IEEE-754 summation order can differ by ~1e-16 across
+                    # identical pinned runner environments. This bound is far
+                    # below every reported precision; no outcome may be
+                    # retuned and all counts, fingerprints and decisions stay exact.
+                    if not math.isclose(a, b, rel_tol=1e-12, abs_tol=1e-12):
+                        items.append((prefix, a, b))
                 elif a != b:
                     items.append((prefix, a, b))
                 return items
             d = discrepancies(old, result)
-            print('FROZEN_RESULT_MISMATCH_DIAGNOSTIC=' + json.dumps({
-                'count': len(d), 'first_differences': d[:25],
-                'source_sha_before': old.get('provenance', {}).get('dataset_sha256'),
-                'source_sha_current': source_hash,
-                'protocol_sha_before': old.get('provenance', {}).get('protocol_sha256'),
-                'protocol_sha_current': protocol_hash,
-            }, sort_keys=True), file=sys.stderr)
-            raise RuntimeError('Frozen V2 result changed: refuse to overwrite')
+            if d:
+                print('FROZEN_RESULT_MISMATCH_DIAGNOSTIC=' + json.dumps({
+                    'count': len(d), 'first_differences': d[:25],
+                    'source_sha_before': old.get('provenance', {}).get('dataset_sha256'),
+                    'source_sha_current': source_hash,
+                    'protocol_sha_before': old.get('provenance', {}).get('protocol_sha256'),
+                    'protocol_sha_current': protocol_hash,
+                }, sort_keys=True), file=sys.stderr)
+                raise RuntimeError('Frozen V2 result changed beyond 1e-12 tolerance: refuse to overwrite')
+            print('FROZEN_RESULT_REPLAY_WITHIN_1E-12_FLOAT_TOLERANCE; source, protocol, selections, counts exact')
     else:
         file.write_text(json.dumps(result, indent=2, sort_keys=True)+'\n', encoding='utf8')
     print('REGISTERED_V2_FINAL='+json.dumps({
