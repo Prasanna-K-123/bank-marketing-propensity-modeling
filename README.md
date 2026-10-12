@@ -38,6 +38,24 @@ Can historical customer and campaign information be used to identify customers m
 | F1 at 0.50 | **0.369** |
 | Reused-test, assumed-value maximizing threshold | **0.55** |
 
+## Registered V2: independent final-holdout policy check (12 October 2026)
+
+This is **a new, separately registered evaluation**, not a retrospective edit of V1's original test set. The [protocol](research_v2/REGISTERED_PROTOCOL.md) was committed before running the full dataset through V2. In the 45,211-row UCI sample, V2 uses disjoint random stratified partitions for training (22,605), probability calibration (6,781), model/threshold selection (6,782), and a final untouched test (9,043). The selected model is logistic regression, with calibration learned on a separate sample; the **hypothetical** contact-score threshold is **0.15**.
+
+| Frozen V2 final-test measure | Result |
+|---|---:|
+| ROC-AUC | **0.7529** (1,000-bootstrap 95% interval 0.7369–0.7697) |
+| Brier probability error | **0.08691** (interval 0.08235–0.09134) |
+| Log loss | **0.30491** |
+| Ten-bin ECE | **0.01077** |
+| Contacted under hypothetical threshold | **1,390 / 9,043 (15.37%)** |
+| Historical subscribers reached | **505** (precision 36.33%; recall 47.73%) |
+| Arbitrary illustrative net units = 8 × reached subscribers − contacts | **+2,650** (contact-all −579; contact-none 0) |
+
+**Economic caveat:** The last row is an arithmetic thought experiment using historical subscription outcomes and completely assumed unit payoffs. It is **not** incremental conversion, causally identified campaign uplift, realized profitability, production targeting, or a valid ROI estimate. All observed customers underwent historical contacts. Random stratification is neither temporal nor group-held-out, and calibration is only assessed on the retrospective sample. The old V1 ROC-AUC 0.755 and test-selected threshold 0.55 refer to a different evaluation scheme; they are retained but **not compared as a controlled performance gain**.
+
+The full result, all adverse cases, provenance fingerprints and uncertainty are preserved in [registered result JSON](research_v2/results/registered_policy_v2.json) and [method/results audit](research_v2/RESULTS_AUDIT.md). [First green source-and-artifact CI run](https://github.com/Prasanna-K-123/bank-marketing-propensity-modeling/actions/runs/38296515143) and [pinned-dependency successful replay](https://github.com/Prasanna-K-123/bank-marketing-propensity-modeling/actions/runs/38297248585) are separately inspectable. An intermediate strict-equality replay failed and remains recorded; it was not silently overwritten. The final candidate still requires CI after documentation integration.
+
 ## Key modeling decision
 
 The strongest methodological choice in the project was excluding **call duration** from the predictor set. Because duration is only known after the call finishes, using it for a pre-call targeting model would make test performance unrealistically optimistic.
@@ -76,7 +94,7 @@ bank-marketing-propensity-modeling/
 
 ## Limitations
 
-- **Selection leakage into evaluation:** the model is chosen using test ROC-AUC; the same test is reused to optimize the illustrative economic threshold. Reported model and threshold values are exploratory and subject to post-selection optimism; a separate validation/test protocol would be needed for independent estimates.
+- **Historical V1 selection leakage:** the original model was selected on its test ROC-AUC and its hypothetical threshold optimized on the same partition. V1's 0.755 AUC and 0.55 threshold remain exploratory and cannot be used as untouched evidence. The separately registered V2 now provides an independent retrospective final test, but **still not temporal/generalization or causal policy validation**.
 - The campaign-value calculation uses assumed unit costs/payoffs and historical observed subscriptions. It does not establish incremental conversions, profitability or effects of contacting customers.
 - The classifiers use balanced class weights; no probability calibration analysis was performed. Treat scores as rankings, not validated purchase likelihoods.
 - Predictive coefficients and feature importance do not establish causal changes; time/cohort/drift robustness has not been evaluated.
