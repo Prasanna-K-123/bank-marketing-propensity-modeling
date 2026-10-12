@@ -1,0 +1,54 @@
+name: Registered Bank Policy V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research_v2/**'
+      - '.github/workflows/bank-policy-v2.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research_v2/**'
+      - '.github/workflows/bank-policy-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  registered-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install declared research dependencies and test runner
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
+      - name: Synthetic invariant and reproducibility unit tests
+        run: python -m pytest research_v2/test_registered_policy.py -q
+      - name: Execute once on UCI dataset after frozen protocol
+        run: python research_v2/validate_policy.py
+      - name: Validate result JSON and preserved V1
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research_v2/results/registered_policy_v2.json')
+          d=json.loads(p.read_text())
+          assert d['provenance']['row_count']==45211
+          assert d['provenance']['predictor_count']==15
+          assert sum(d['partitions'][k]['n'] for k in ('train','calibration','selection','test'))==45211
+          assert len(d['selection']['threshold_table'])==19
+          assert d['final_untouched_test']['bootstrap_1000']['brier']['replicates']==1000
+          assert Path('analysis.py').is_file()
+          print('V2_RESULT_CONTRACT_PASS')
+          PY
+      - name: Preserve full selected-policy and adverse evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: registered-bank-v2-holdout-result
+          path: research_v2/results/registered_policy_v2.json
+          retention-days: 90
