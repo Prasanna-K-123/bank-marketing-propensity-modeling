@@ -1,6 +1,6 @@
 # Bank Marketing Propensity & Campaign Decisioning
 
-Predictive customer-response modeling using the **UCI Bank Marketing** dataset. The project compares interpretable classification models, handles class imbalance, controls target leakage, and links model thresholds to campaign decision-making.
+Exploratory customer-response classification on the **UCI Bank Marketing** dataset. This retrospective notebook/script compares two class-weighted models and constructs a hypothetical threshold/value table. **The same test partition selects the preferred model and threshold; there is no untouched final policy evaluation, calibrated subscription probability or verified future-campaign gain.**
 
 ## Business question
 
@@ -23,20 +23,20 @@ Can historical customer and campaign information be used to identify customers m
 5. Compared:
    - Logistic Regression with balanced class weights
    - Decision Tree with depth and leaf-size controls
-6. Evaluated Accuracy, Precision, Recall, F1 and ROC-AUC.
-7. Tested probability thresholds rather than assuming 0.50 is always the right operating point.
-8. Added an illustrative cost-benefit scenario to show how a business threshold could be selected.
+6. Evaluated accuracy, precision, recall, F1 and ROC-AUC **on the same held-out partition later reused for model choice**.
+7. Explored score thresholds using that same test partition, not an independently validated operating policy. Class weighting means output scores are **not established as calibrated subscription probabilities**.
+8. Applied arbitrary CONTACT_COST=1 and SUBSCRIPTION_VALUE=8 illustrative units to choose a test-selected threshold; no observed business value or independent policy test is available.
 
 ## Verified results
 
 | Metric | Result |
 |---|---:|
-| Best model by ROC-AUC | **Logistic Regression** |
-| Test ROC-AUC | **0.755** |
+| Model with highest ROC-AUC on reused test partition | **Logistic Regression** |
+| Exploratory reused-test ROC-AUC for chosen model | **0.755** |
 | Precision at 0.50 | **0.267** |
 | Recall at 0.50 | **0.599** |
 | F1 at 0.50 | **0.369** |
-| Illustrative value-maximizing threshold | **0.55** |
+| Reused-test, assumed-value maximizing threshold | **0.55** |
 
 ## Key modeling decision
 
@@ -46,7 +46,7 @@ The strongest methodological choice in the project was excluding **call duration
 
 - Accuracy alone is not an adequate metric because only 11.7% of customers subscribe.
 - Threshold selection should depend on the cost of contacting a customer versus the expected value of a successful subscription.
-- Logistic Regression generalized better than the constrained Decision Tree on ROC-AUC in this implementation.
+- Logistic regression scored higher on the **reused test partition**; selecting the winner on those same outcomes precludes treating its 0.755 AUC as an independent, post-selection performance estimate.
 - The project treats model outputs as predictive associations, not causal evidence that changing a feature would change subscription behavior.
 
 ## Technology stack
@@ -71,11 +71,13 @@ bank-marketing-propensity-modeling/
 ## Reproducing the analysis
 
 1. Install the packages in `requirements.txt`.
-2. Run `analysis.py` in an IPython/Jupyter environment or adapt the `display()` calls to `print()` for a standard Python shell.
+2. Current `analysis.py` imports `IPython.display`; install `ipython` separately (not currently declared in `requirements.txt`) and run `python analysis.py` with access to the live UCI data source. A self-contained standard-CLI output path is **not yet verified**. Do not report reproduction as independently completed.
 3. Compare model metrics and inspect the threshold-analysis tables.
 
 ## Limitations
 
-- The campaign-value calculation is an illustrative scenario rather than the bank's real economics.
-- Predictive coefficients and feature importance do not establish causality.
-- Performance may vary under different time periods, populations, or campaign strategies.
+- **Selection leakage into evaluation:** the model is chosen using test ROC-AUC; the same test is reused to optimize the illustrative economic threshold. Reported model and threshold values are exploratory and subject to post-selection optimism; a separate validation/test protocol would be needed for independent estimates.
+- The campaign-value calculation uses assumed unit costs/payoffs and historical observed subscriptions. It does not establish incremental conversions, profitability or effects of contacting customers.
+- The classifiers use balanced class weights; no probability calibration analysis was performed. Treat scores as rankings, not validated purchase likelihoods.
+- Predictive coefficients and feature importance do not establish causal changes; time/cohort/drift robustness has not been evaluated.
+- The CLI dependency/formatting defect is recorded as an open reproducibility issue, not claimed fixed by this documentation.
