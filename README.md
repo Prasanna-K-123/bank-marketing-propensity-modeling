@@ -71,7 +71,7 @@ bank-marketing-propensity-modeling/
 ## Reproducing the analysis
 
 1. Install the packages in `requirements.txt`.
-2. Current `analysis.py` imports `IPython.display`; install `ipython` separately (not currently declared in `requirements.txt`) and run `python analysis.py` with access to the live UCI data source. A self-contained standard-CLI output path is **not yet verified**. Do not report reproduction as independently completed.
+2. Current `analysis.py` imports `IPython.display`; `ipython` has now been added to `requirements.txt`. Run `python analysis.py` with access to the live UCI data source. The dependency declaration and import have been read back, but a complete fresh environment install and end-to-end source download have **not** been independently replayed; do not treat this as a certified reproducibility pass. Do not report reproduction as independently completed.
 3. Compare model metrics and inspect the threshold-analysis tables.
 
 ## Limitations
