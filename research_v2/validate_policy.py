@@ -200,6 +200,27 @@ def main():
     if file.exists():
         old = json.loads(file.read_text())
         if old != result:
+            def discrepancies(a, b, prefix=''):
+                items = []
+                if isinstance(a, dict) and isinstance(b, dict):
+                    for key in sorted(set(a) | set(b)):
+                        items.extend(discrepancies(a.get(key), b.get(key), prefix + '/' + str(key)))
+                elif isinstance(a, list) and isinstance(b, list):
+                    if len(a) != len(b):
+                        items.append((prefix + '/length', len(a), len(b)))
+                    for j, (left, right) in enumerate(zip(a, b)):
+                        items.extend(discrepancies(left, right, prefix + '/' + str(j)))
+                elif a != b:
+                    items.append((prefix, a, b))
+                return items
+            d = discrepancies(old, result)
+            print('FROZEN_RESULT_MISMATCH_DIAGNOSTIC=' + json.dumps({
+                'count': len(d), 'first_differences': d[:25],
+                'source_sha_before': old.get('provenance', {}).get('dataset_sha256'),
+                'source_sha_current': source_hash,
+                'protocol_sha_before': old.get('provenance', {}).get('protocol_sha256'),
+                'protocol_sha_current': protocol_hash,
+            }, sort_keys=True), file=sys.stderr)
             raise RuntimeError('Frozen V2 result changed: refuse to overwrite')
     else:
         file.write_text(json.dumps(result, indent=2, sort_keys=True)+'\n', encoding='utf8')
