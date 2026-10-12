@@ -1,0 +1,9 @@
+# V2 validation environment, pinned to accepted GitHub Actions evidence (Python 3.12).
+ucimlrepo==0.0.7
+numpy==2.5.4
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.18.1
+joblib==1.6.0
+threadpoolctl==3.7.0
+pytest==9.1.1
